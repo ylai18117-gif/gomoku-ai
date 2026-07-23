@@ -3,55 +3,146 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>五子棋 AI 训练</title>
+  <title>弈道 · 五子棋 AI 训练</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- 环境光层 -->
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient__glow ambient__glow--a"></div>
+    <div class="ambient__glow ambient__glow--b"></div>
+    <div class="ambient__grid"></div>
+  </div>
+
   <div class="app">
-    <header>
-      <h1>🎯 五子棋 AI 训练</h1>
-      <p class="subtitle">选择先后手，与 AI 对弈，赛后复盘提升</p>
+    <!-- ===== 页头：印章式标题 ===== -->
+    <header class="site-head">
+      <div class="brand">
+        <div class="seal">弈</div>
+        <div class="brand__text">
+          <h1>弈道<span class="brand__dot">·</span>五子棋</h1>
+          <p>人机对弈 &nbsp;/&nbsp; AI 教练复盘 &nbsp;/&nbsp; 无禁手</p>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat__num" id="stat-wins">0</span>
+          <span class="stat__label">胜</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num" id="stat-losses">0</span>
+          <span class="stat__label">负</span>
+        </div>
+        <div class="stat">
+          <span class="stat__num" id="stat-games">0</span>
+          <span class="stat__label">局</span>
+        </div>
+      </div>
     </header>
 
-    <div class="main-layout">
-      <!-- 左侧：棋盘 -->
-      <div class="board-section">
-        <div class="toolbar">
-          <div class="side-select">
-            <span>执棋：</span>
-            <button id="btn-black" class="side-btn selected">⚫ 黑棋(先手)</button>
-            <button id="btn-white" class="side-btn">⚪ 白棋(后手)</button>
+    <!-- ===== 主体 ===== -->
+    <main class="main">
+      <!-- 对局区 -->
+      <section class="play-zone">
+        <!-- 回合指示 -->
+        <div class="turn-bar">
+          <div class="turn-card" id="turn-human">
+            <span class="stone-dot stone-dot--human is-black"></span>
+            <div class="turn-card__info">
+              <span class="turn-card__name">你</span>
+              <span class="turn-card__side" id="human-side">执黑先行</span>
+            </div>
+            <span class="turn-card__pulse"></span>
           </div>
-          <div class="diff-select">
-            <span>难度：</span>
-            <button class="diff-btn" data-diff="easy">简单</button>
-            <button class="diff-btn active" data-diff="medium">中等</button>
-            <button class="diff-btn" data-diff="hard">困难</button>
+          <div class="turn-vs">VS</div>
+          <div class="turn-card" id="turn-ai">
+            <span class="stone-dot stone-dot--ai is-white"></span>
+            <div class="turn-card__info">
+              <span class="turn-card__name">AI</span>
+              <span class="turn-card__side" id="ai-side">执白后行</span>
+            </div>
+            <span class="turn-card__pulse"></span>
+          </div>
+          <div class="turn-status" id="status">选择先后手，开始对弈</div>
+        </div>
+
+        <!-- 棋盘 -->
+        <div class="board-frame">
+          <div class="board-frame__inner">
+            <canvas id="board"></canvas>
+          </div>
+          <!-- 胜负覆盖层 -->
+          <div class="result-overlay" id="result-overlay">
+            <div class="result-card">
+              <div class="result-stamp" id="result-stamp">胜</div>
+              <h2 id="result-title">恭喜获胜</h2>
+              <p id="result-sub">共 24 手 · 用时 3分12秒</p>
+              <div class="result-actions">
+                <button class="btn btn--primary" id="result-review">📋 AI 复盘教学</button>
+                <button class="btn btn--ghost" id="result-again">再来一局</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="canvas-wrapper">
-          <canvas id="board"></canvas>
+        <!-- 操作栏 -->
+        <div class="controls">
+          <div class="control-group">
+            <span class="control-group__label">先后手</span>
+            <button id="btn-black" class="chip chip--active">⚫ 执黑 · 先手</button>
+            <button id="btn-white" class="chip">⚪ 执白 · 后手</button>
+          </div>
+          <div class="control-group">
+            <span class="control-group__label">AI 难度</span>
+            <button class="chip diff-btn" data-diff="easy">入门</button>
+            <button class="chip chip--active diff-btn" data-diff="medium">进阶</button>
+            <button class="chip diff-btn" data-diff="hard">高手</button>
+          </div>
+          <div class="control-group control-group--end">
+            <button id="btn-undo" class="btn btn--ghost">↩ 悔棋</button>
+            <button id="btn-restart" class="btn btn--ghost">⟳ 重开</button>
+            <button id="btn-sound" class="btn btn--ghost" title="音效开关">🔊</button>
+          </div>
         </div>
+      </section>
 
-        <div class="actions">
-          <button id="btn-undo">↩ 悔棋</button>
-          <button id="btn-restart">🔄 重新开始</button>
-          <button id="btn-review" style="display:none">📋 AI 复盘</button>
+      <!-- 侧栏：棋谱 -->
+      <aside class="side-panel">
+        <div class="panel">
+          <div class="panel__head">
+            <h2>对局棋谱</h2>
+            <span class="panel__badge" id="move-count">0 手</span>
+          </div>
+          <ol class="move-list" id="move-list">
+            <li class="move-list__empty">落子后，棋谱将记录在这里</li>
+          </ol>
         </div>
+        <div class="panel panel--tip">
+          <h3>💡 教练提示</h3>
+          <p id="tip-text">开局占天元，八个方向皆可成势。活三不如冲四，冲四不如做杀——制造「必须回应」的威胁，是赢棋的关键。</p>
+        </div>
+      </aside>
+    </main>
 
-        <div id="status" class="status">请选择先后手，然后开始对局</div>
+    <!-- ===== 复盘区 ===== -->
+    <section class="review-zone" id="review-panel" style="display:none">
+      <div class="review-head">
+        <div class="seal seal--gold">盘</div>
+        <div>
+          <h2>复盘 · AI 教练点评</h2>
+          <p>商汤日日新大模型为你拆解本局得失</p>
+        </div>
       </div>
+      <div id="review-content" class="review-content"></div>
+    </section>
 
-      <!-- 右侧：复盘面板 -->
-      <div id="review-panel" class="review-panel" style="display:none">
-        <h2>📖 复盘分析</h2>
-        <div id="review-content" class="review-content"></div>
-      </div>
-    </div>
-
-    <footer>
-      <p>五子棋 AI 训练 · 无禁手规则 · AI教练复盘</p>
+    <footer class="site-foot">
+      <span>弈道 · 五子棋 AI 训练</span>
+      <span class="site-foot__sep">—</span>
+      <span>落子无悔 · 观棋有语</span>
     </footer>
   </div>
 

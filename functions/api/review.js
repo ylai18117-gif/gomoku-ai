@@ -25,7 +25,7 @@ export async function onRequestPost(context) {
     }
 
     // 调用商汤日日新 API（OpenAI 兼容格式）
-    const apiResponse = await fetch('https://api.sensenova.cn/v1/chat/completions', {
+    const apiResponse = await fetch('https://token.sensenova.cn/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
