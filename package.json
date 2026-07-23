@@ -1,0 +1,10 @@
+{
+  "name": "gomoku-ai-trainer",
+  "version": "1.0.0",
+  "description": "五子棋 AI 训练 - 对弈 + AI教练复盘",
+  "private": true,
+  "scripts": {
+    "dev": "npx wrangler pages dev public --port 8788",
+    "deploy": "npx wrangler pages deploy public --project-name=gomoku-ai"
+  }
+}

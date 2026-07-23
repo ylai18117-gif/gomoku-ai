@@ -1,0 +1,209 @@
+/* ===== 五子棋 AI 训练 - 样式 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height: 100vh;
+  color: #e0e0e0;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+header h1 {
+  font-size: 2rem;
+  background: linear-gradient(90deg, #f7971e, #ffd200);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.subtitle {
+  color: #999;
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+
+/* ===== 布局 ===== */
+.main-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.board-section {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.review-panel {
+  flex: 1;
+  min-width: 320px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.review-panel h2 {
+  margin-bottom: 12px;
+  color: #ffd200;
+}
+.review-content {
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+.review-content h1, .review-content h2, .review-content h3 {
+  color: #f7971e;
+  margin: 12px 0 6px;
+}
+.review-content strong { color: #fff; }
+.review-content code {
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+.review-content li { margin-left: 18px; margin-bottom: 4px; }
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.1rem;
+  color: #aaa;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===== 工具栏 ===== */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+}
+.toolbar span {
+  font-size: 0.9rem;
+  color: #bbb;
+}
+.side-select, .diff-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.side-btn, .diff-btn {
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+  color: #ddd;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.side-btn:hover, .diff-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+.side-btn.selected, .diff-btn.active {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: #1a1a2e;
+  font-weight: 600;
+  border-color: transparent;
+}
+
+/* ===== 棋盘 ===== */
+.canvas-wrapper {
+  display: flex;
+  justify-content: center;
+  background: rgba(0,0,0,0.2);
+  border-radius: 12px;
+  padding: 12px;
+}
+#board {
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* ===== 操作按钮 ===== */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+#btn-undo {
+  background: rgba(255,255,255,0.1);
+  color: #ddd;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+#btn-restart {
+  background: rgba(255,100,100,0.15);
+  color: #ff8888;
+  border: 1px solid rgba(255,100,100,0.3);
+}
+#btn-review {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+.actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* ===== 状态栏 ===== */
+.status {
+  text-align: center;
+  margin-top: 14px;
+  padding: 10px;
+  font-size: 1rem;
+  color: #ffd200;
+  font-weight: 500;
+}
+
+footer {
+  text-align: center;
+  margin-top: 30px;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 900px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  .review-panel {
+    min-width: unset;
+    max-height: none;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

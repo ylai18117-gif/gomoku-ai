@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>五子棋 AI 训练</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎯 五子棋 AI 训练</h1>
+      <p class="subtitle">选择先后手，与 AI 对弈，赛后复盘提升</p>
+    </header>
+
+    <div class="main-layout">
+      <!-- 左侧：棋盘 -->
+      <div class="board-section">
+        <div class="toolbar">
+          <div class="side-select">
+            <span>执棋：</span>
+            <button id="btn-black" class="side-btn selected">⚫ 黑棋(先手)</button>
+            <button id="btn-white" class="side-btn">⚪ 白棋(后手)</button>
+          </div>
+          <div class="diff-select">
+            <span>难度：</span>
+            <button class="diff-btn" data-diff="easy">简单</button>
+            <button class="diff-btn active" data-diff="medium">中等</button>
+            <button class="diff-btn" data-diff="hard">困难</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <canvas id="board"></canvas>
+        </div>
+
+        <div class="actions">
+          <button id="btn-undo">↩ 悔棋</button>
+          <button id="btn-restart">🔄 重新开始</button>
+          <button id="btn-review" style="display:none">📋 AI 复盘</button>
+        </div>
+
+        <div id="status" class="status">请选择先后手，然后开始对局</div>
+      </div>
+
+      <!-- 右侧：复盘面板 -->
+      <div id="review-panel" class="review-panel" style="display:none">
+        <h2>📖 复盘分析</h2>
+        <div id="review-content" class="review-content"></div>
+      </div>
+    </div>
+
+    <footer>
+      <p>五子棋 AI 训练 · 无禁手规则 · AI教练复盘</p>
+    </footer>
+  </div>
+
+  <script src="js/game.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/review.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
