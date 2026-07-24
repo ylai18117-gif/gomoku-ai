@@ -48,7 +48,7 @@ export async function onRequestPost(context) {
     if (!apiResponse.ok) {
       const errText = await apiResponse.text();
       console.error('商汤 API 错误:', apiResponse.status, errText);
-      return jsonResponse({ error: `AI 服务错误: ${apiResponse.status}` }, 502);
+      return jsonResponse({ error: `AI 服务错误 (${apiResponse.status}): ${errText}` }, 502);
     }
 
     const data = await apiResponse.json();
