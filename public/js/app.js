@@ -11,6 +11,10 @@ class GomokuApp {
     this.hoverPos = null;
     this.startedAt = null;
 
+    // 教学教练模式 (默认开启威胁雷达与建议)
+    this.coachMode = true;
+    this.activeHint = null;
+
     // 战绩（localStorage 持久化）
     this.stats = JSON.parse(localStorage.getItem('gomoku-stats') || '{"wins":0,"losses":0,"games":0}');
 
@@ -104,6 +108,27 @@ class GomokuApp {
     document.getElementById('btn-white').addEventListener('click', () => this.startGame(2));
     document.getElementById('btn-undo').addEventListener('click', () => this.undo());
     document.getElementById('btn-restart').addEventListener('click', () => this.restart());
+    document.getElementById('btn-hint').addEventListener('click', () => this.showCoachHint());
+    document.getElementById('coach-hint-close').addEventListener('click', () => this.hideCoachHint());
+
+    document.getElementById('btn-mode-coach').addEventListener('click', () => {
+      this.coachMode = true;
+      document.getElementById('btn-mode-coach').classList.add('chip--active');
+      document.getElementById('btn-mode-test').classList.remove('chip--active');
+      this.flashStatus('已开启「教学预警模式」：实时标出危险与应对提示');
+      this.draw();
+    });
+
+    document.getElementById('btn-mode-test').addEventListener('click', () => {
+      this.coachMode = false;
+      this.activeHint = null;
+      this.hideCoachHint();
+      document.getElementById('btn-mode-test').classList.add('chip--active');
+      document.getElementById('btn-mode-coach').classList.remove('chip--active');
+      this.flashStatus('已切换为「实战测试模式」：无辅助预警，检验真实水平');
+      this.draw();
+    });
+
     document.getElementById('result-again').addEventListener('click', () => this.restart());
     document.getElementById('result-review').addEventListener('click', () => {
       this.hideResult();
@@ -189,10 +214,13 @@ class GomokuApp {
   /** 落子统一入口：更新游戏、动画、音效、棋谱 */
   placeStone(row, col, player) {
     if (!this.game.makeMove(row, col)) return;
+    this.activeHint = null;
+    this.hideCoachHint();
     this.animations.push({ row, col, start: performance.now() });
     this.playStone();
     this.renderMoveList();
     this.updateTurnIndicator();
+    this.updateEvalBar();
 
     if (this.game.gameOver) {
       this.onGameEnd();
@@ -201,6 +229,61 @@ class GomokuApp {
     } else {
       this.flashStatus('轮到你落子');
     }
+  }
+
+  showCoachHint() {
+    if (this.game.gameOver || this.aiThinking) return;
+    const hint = this.game.getHint(this.humanPlayer, this.ai);
+    if (!hint) return;
+    this.activeHint = hint;
+
+    document.getElementById('coach-hint-badge').textContent = `💡 ${hint.title}`;
+    document.getElementById('coach-hint-title').textContent = `推荐落子 ${hint.posStr}`;
+    document.getElementById('coach-hint-desc').textContent = hint.desc;
+    document.getElementById('coach-hint-card').style.display = 'block';
+
+    this.draw();
+  }
+
+  hideCoachHint() {
+    this.activeHint = null;
+    document.getElementById('coach-hint-card').style.display = 'none';
+  }
+
+  updateEvalBar() {
+    if (this.game.history.length === 0) {
+      document.getElementById('eval-bar-fill').style.width = '50%';
+      document.getElementById('eval-bar-text').textContent = '⚖️ 势均力敌 (黑 50% vs 白 50%)';
+      return;
+    }
+    const score = this.ai.evaluateBoard(this.game, 1, 2);
+    let winPct = Math.min(95, Math.max(5, Math.round(50 + score / 200)));
+    document.getElementById('eval-bar-fill').style.width = `${winPct}%`;
+
+    let text = '';
+    if (winPct > 60) text = `🔥 黑棋优势显著 (黑 ${winPct}% vs 白 ${100 - winPct}%)`;
+    else if (winPct < 40) text = `⚠️ 白棋优势显著 (黑 ${winPct}% vs 白 ${100 - winPct}%)`;
+    else text = `⚖️ 局势僵持中 (黑 ${winPct}% vs 白 ${100 - winPct}%)`;
+
+    document.getElementById('eval-bar-text').textContent = text;
+  }
+
+  replayFromMove(index) {
+    if (this.aiThinking) return;
+    while (this.game.history.length > index + 1) {
+      this.game.undoMove();
+    }
+    this.animations = [];
+    this.game.gameOver = false;
+    this.game.winner = 0;
+    this.game.winLine = null;
+    this.hideResult();
+    this.hideCoachHint();
+    this.renderMoveList();
+    this.updateTurnIndicator();
+    this.updateEvalBar();
+    this.draw();
+    this.flashStatus(`已回到第 ${index + 1} 手 — 请尝试重新下子`);
   }
 
   // ============ AI 落子 ============
@@ -354,6 +437,7 @@ class GomokuApp {
         <span class="mv-stone mv-stone--${m.player === 1 ? 'b' : 'w'}"></span>
         <span class="mv-who">${isHuman ? '你' : 'AI'}</span>
         <span class="mv-pos">${cols[m.col]}${m.row + 1}</span>
+        <button class="mv-action-replay" onclick="window.app.replayFromMove(${i})">↪ 重试</button>
       </li>`;
     }).join('');
     list.scrollTop = list.scrollHeight;
@@ -433,7 +517,6 @@ class GomokuApp {
 
   startRenderLoop() {
     const loop = () => {
-      // 有动画进行或悬停时重绘
       const now = performance.now();
       this.animations = this.animations.filter(a => now - a.start < 320);
       this.draw();
@@ -520,21 +603,53 @@ class GomokuApp {
       ctx.stroke();
     }
 
-    // 棋子（带落子动画）
     const now = performance.now();
     const stoneR = this.cellSize * 0.44;
+
+    // 威胁闪烁预警 (教学模式下)
+    if (this.coachMode && !this.game.gameOver && this.game.currentPlayer === this.humanPlayer) {
+      const threats = this.game.detectThreats(this.humanPlayer);
+      for (const t of threats) {
+        const p = this.boardToPixel(t.row, t.col);
+        const color = t.level === 'critical' ? 'rgba(235, 59, 36, 0.85)' : 'rgba(243, 156, 18, 0.75)';
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = t.level === 'critical' ? 3 : 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, stoneR * 0.9, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // 教练推荐落子高亮
+    if (this.activeHint && this.activeHint.move) {
+      const p = this.boardToPixel(this.activeHint.move.row, this.activeHint.move.col);
+      ctx.save();
+      ctx.fillStyle = 'rgba(212, 169, 92, 0.4)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, stoneR * 0.85, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#d4a95c';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, stoneR * 0.85, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 棋子（带落子动画）
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         const v = this.game.board[r][c];
         if (v === 0) continue;
         const p = this.boardToPixel(r, c);
 
-        // 落子弹跳动画
         let scale = 1, alpha = 1;
         const anim = this.animations.find(a => a.row === r && a.col === c);
         if (anim) {
           const t = Math.min((now - anim.start) / 320, 1);
-          // ease-out-back 弹跳
           const c1 = 1.70158, c3 = c1 + 1;
           scale = 0.3 + 0.7 * (1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2));
           alpha = Math.min(t * 3, 1);
@@ -585,7 +700,6 @@ class GomokuApp {
         this.game.winLine[this.game.winLine.length - 1].row,
         this.game.winLine[this.game.winLine.length - 1].col
       );
-      // 发光连线
       ctx.strokeStyle = 'rgba(200, 80, 46, 0.35)';
       ctx.lineWidth = 10;
       ctx.lineCap = 'round';
@@ -594,7 +708,6 @@ class GomokuApp {
       ctx.lineWidth = 4;
       ctx.beginPath(); ctx.moveTo(first.x, first.y); ctx.lineTo(last.x, last.y); ctx.stroke();
 
-      // 获胜棋子描圈
       for (const cell of this.game.winLine) {
         const p = this.boardToPixel(cell.row, cell.col);
         ctx.strokeStyle = 'rgba(240, 196, 122, 0.9)';

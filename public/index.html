@@ -43,6 +43,14 @@
       </div>
     </header>
 
+    <!-- ===== 胜率/优势评估条 ===== -->
+    <div class="eval-bar-container">
+      <div class="eval-bar">
+        <div class="eval-bar__fill" id="eval-bar-fill" style="width: 50%;"></div>
+      </div>
+      <div class="eval-bar__text" id="eval-bar-text">⚖️ 势均力敌 (黑 50% vs 白 50%)</div>
+    </div>
+
     <!-- ===== 主体 ===== -->
     <main class="main">
       <!-- 对局区 -->
@@ -69,10 +77,17 @@
           <div class="turn-status" id="status">选择先后手，开始对弈</div>
         </div>
 
-        <!-- 棋盘 -->
+        <!-- 棋盘 Frame -->
         <div class="board-frame">
           <div class="board-frame__inner">
             <canvas id="board"></canvas>
+            <!-- 实时教练提示浮层卡片 -->
+            <div class="coach-hint-card" id="coach-hint-card" style="display:none">
+              <button class="coach-hint-close" id="coach-hint-close">&times;</button>
+              <div class="coach-hint-badge" id="coach-hint-badge">💡 攻守兼备</div>
+              <h4 class="coach-hint-title" id="coach-hint-title">推荐落子 H8</h4>
+              <p class="coach-hint-desc" id="coach-hint-desc">抢占要道，同时形成活三与防守拦截。</p>
+            </div>
           </div>
           <!-- 胜负覆盖层 -->
           <div class="result-overlay" id="result-overlay">
@@ -91,9 +106,14 @@
         <!-- 操作栏 -->
         <div class="controls">
           <div class="control-group">
+            <span class="control-group__label">模式</span>
+            <button id="btn-mode-coach" class="chip chip--active">🎓 教学预警</button>
+            <button id="btn-mode-test" class="chip">⚔️ 实战测试</button>
+          </div>
+          <div class="control-group">
             <span class="control-group__label">先后手</span>
-            <button id="btn-black" class="chip chip--active">⚫ 执黑 · 先手</button>
-            <button id="btn-white" class="chip">⚪ 执白 · 后手</button>
+            <button id="btn-black" class="chip chip--active">⚫ 执黑</button>
+            <button id="btn-white" class="chip">⚪ 执白</button>
           </div>
           <div class="control-group">
             <span class="control-group__label">AI 难度</span>
@@ -102,6 +122,7 @@
             <button class="chip diff-btn" data-diff="hard">高手</button>
           </div>
           <div class="control-group control-group--end">
+            <button id="btn-hint" class="btn btn--accent">💡 求助教练</button>
             <button id="btn-undo" class="btn btn--ghost">↩ 悔棋</button>
             <button id="btn-restart" class="btn btn--ghost">⟳ 重开</button>
             <button id="btn-sound" class="btn btn--ghost" title="音效开关">🔊</button>
@@ -121,7 +142,7 @@
           </ol>
         </div>
         <div class="panel panel--tip">
-          <h3>💡 教练提示</h3>
+          <h3>💡 教练秘籍</h3>
           <p id="tip-text">开局占天元，八个方向皆可成势。活三不如冲四，冲四不如做杀——制造「必须回应」的威胁，是赢棋的关键。</p>
         </div>
       </aside>
