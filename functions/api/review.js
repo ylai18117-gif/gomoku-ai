@@ -24,30 +24,47 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: '服务端未配置 API 密钥' }, 500);
     }
 
-    // 调用商汤日日新 API（OpenAI 兼容格式）
-    const apiResponse = await fetch('https://token.sensenova.cn/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        messages: [
-          {
-            role: 'system',
-            content: '你是一位专业的五子棋教练，擅长复盘分析和教学。请用中文回复。'
-          },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
-    });
+    // 调用商汤日日新 API（带 429 Rate-Limit 自动重试）
+    let apiResponse;
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      attempts++;
+      apiResponse = await fetch('https://token.sensenova.cn/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-v4-flash',
+          messages: [
+            {
+              role: 'system',
+              content: '你是一位专业的五子棋教练，擅长复盘分析和教学。请用中文回复。'
+            },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+        }),
+      });
+
+      if (apiResponse.status === 429 && attempts < maxAttempts) {
+        // 触发 TPM/RPM 限流，延迟 1.5 秒后重试
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+      break;
+    }
 
     if (!apiResponse.ok) {
       const errText = await apiResponse.text();
       console.error('商汤 API 错误:', apiResponse.status, errText);
+      if (apiResponse.status === 429) {
+        return jsonResponse({ content: '⏳ 当前 API 触发了频次速率限制 (429 TPM Limit)，请等待几秒后再试。' });
+      }
       return jsonResponse({ error: `AI 服务错误 (${apiResponse.status}): ${errText}` }, 502);
     }
 
