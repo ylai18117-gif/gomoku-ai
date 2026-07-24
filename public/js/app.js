@@ -158,7 +158,11 @@ class GomokuApp {
 
   resizeCanvas() {
     const container = this.canvas.parentElement;
-    const maxSize = Math.min(container.clientWidth - 28, 660);
+    if (!container) return;
+    const availW = container.clientWidth - 16;
+    const availH = container.clientHeight - 16;
+    // 动态取宽高最小容限，保证在短屏幕上棋盘不超出容器高度
+    const maxSize = Math.max(240, Math.min(availW, availH > 50 ? availH : 640, 640));
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = maxSize * dpr;
     this.canvas.height = maxSize * dpr;
