@@ -148,17 +148,20 @@
       </aside>
     </main>
 
-    <!-- ===== 复盘区 ===== -->
-    <section class="review-zone" id="review-panel" style="display:none">
-      <div class="review-head">
-        <div class="seal seal--gold">盘</div>
-        <div>
-          <h2>复盘 · AI 教练点评</h2>
-          <p>商汤日日新大模型为你拆解本局得失</p>
+    <!-- ===== 复盘弹窗 ===== -->
+    <div class="review-modal-overlay" id="review-panel" style="display:none">
+      <section class="review-zone">
+        <button class="review-close-btn" id="review-close">&times;</button>
+        <div class="review-head">
+          <div class="seal seal--gold">盘</div>
+          <div>
+            <h2>复盘 · AI 教练点评</h2>
+            <p>商汤日日新大模型为你拆解本局得失</p>
+          </div>
         </div>
-      </div>
-      <div id="review-content" class="review-content"></div>
-    </section>
+        <div id="review-content" class="review-content"></div>
+      </section>
+    </div>
 
     <footer class="site-foot">
       <span>弈道 · 五子棋 AI 训练</span>

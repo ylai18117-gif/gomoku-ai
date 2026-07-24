@@ -52,7 +52,15 @@ export async function onRequestPost(context) {
     }
 
     const data = await apiResponse.json();
-    const content = data.choices?.[0]?.message?.content || '未能获取分析结果';
+    const content = data.choices?.[0]?.message?.content ||
+                    data.choices?.[0]?.text ||
+                    data.data?.choices?.[0]?.message?.content ||
+                    (typeof data.content === 'string' ? data.content : null);
+
+    if (!content) {
+      console.error('API 未能解析到有效文本:', JSON.stringify(data));
+      return jsonResponse({ content: 'AI 复盘思考超时或未能生成响应，请稍后再试。' });
+    }
 
     return jsonResponse({ content });
 

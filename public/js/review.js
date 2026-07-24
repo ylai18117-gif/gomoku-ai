@@ -17,41 +17,43 @@ class ReviewModule {
     const cols = 'ABCDEFGHIJKLMNO';
     const humanName = humanPlayer === 1 ? '黑棋' : '白棋';
     const aiName = humanPlayer === 1 ? '白棋' : '黑棋';
-    const winnerText = game.winner === humanPlayer ? '你赢了' :
-                       game.winner === 3 ? '平局' : 'AI赢了';
+    const winnerText = game.winner === humanPlayer ? '人类获胜' :
+                       game.winner === 3 ? '平局' : 'AI获胜';
 
-    // 构建棋谱文本
+    // 精简棋谱文本（避免超长对局超 Token 导致 API 超时）
     let movesText = '';
-    game.history.forEach((m, i) => {
-      const name = m.player === 1 ? '黑' : '白';
-      const mark = m.player === humanPlayer ? '(你)' : '(AI)';
-      movesText += `第${i + 1}手: ${name}${mark} ${cols[m.col]}${m.row + 1}\n`;
-    });
+    const history = game.history;
+    if (history.length <= 30) {
+      history.forEach((m, i) => {
+        const name = m.player === 1 ? '黑' : '白';
+        movesText += `${i + 1}.${name}${cols[m.col]}${m.row + 1} `;
+      });
+    } else {
+      // 截取前 10 手 + 后 15 手
+      for (let i = 0; i < 10; i++) {
+        const m = history[i];
+        const name = m.player === 1 ? '黑' : '白';
+        movesText += `${i + 1}.${name}${cols[m.col]}${m.row + 1} `;
+      }
+      movesText += `... [中间省略${history.length - 25}手] ... `;
+      for (let i = history.length - 15; i < history.length; i++) {
+        const m = history[i];
+        const name = m.player === 1 ? '黑' : '白';
+        movesText += `${i + 1}.${name}${cols[m.col]}${m.row + 1} `;
+      }
+    }
 
-    const prompt = `你是一位五子棋大师教练，请根据以下棋局进行复盘教学。
+    const prompt = `你是一位五子棋专业教练。请根据以下棋局进行点评复盘：
+【局势参数】玩家:${humanName}, 结果:${winnerText}, 总手数:${history.length}, AI难度:${difficulty}
+【棋谱路线】${movesText}
 
-【棋局信息】
-- 棋盘大小: ${game.size}×${game.size}
-- 你执: ${humanName}
-- AI执: ${aiName}
-- AI难度: ${difficulty === 'easy' ? '简单' : difficulty === 'medium' ? '中等' : '困难'}
-- 结果: ${winnerText}
-- 总手数: ${game.history.length}
+请按照以下四点重点拆解（控制在 400 字以内，使用 Markdown）：
+1. **开局局势**：评估前几手选点得失
+2. **关键胜负手**：找出败着或杀招转折点
+3. **实用技术**：教 1 个针对本局暴露问题的五子棋技巧（如活三、冲四、防守要点）
+4. **教练评价**：一句简短的亲切鼓励
 
-【完整棋谱】
-${movesText}
-
-【最终棋盘】
-${game.boardToText()}
-
-请你以教练身份进行复盘，要求：
-1. **开局分析**（前6手）：评价你的开局策略，是否合理，有无更好选择
-2. **中盘关键手**：找出2-3个关键转折点，分析你的好棋和失误
-3. **战术教学**：结合本局教1-2个实用五子棋技巧（如活三、冲四、做杀、VCF等）
-4. **改进建议**：具体指出哪几步可以改进，应该怎么走
-5. **鼓励总结**：用简短的话总结你的表现，给予鼓励
-
-请用中文回复，语气亲切专业，像一位耐心的棋类教练。使用markdown格式，重点用加粗标注。回复控制在500字以内。`;
+回复要求：语气专业亲切，条理清晰。`;
 
     try {
       const response = await fetch(this.apiEndpoint, {
@@ -61,14 +63,14 @@ ${game.boardToText()}
       });
 
       if (!response.ok) {
-        throw new Error(`API 请求失败: ${response.status}`);
+        throw new Error(`API 返回状态 ${response.status}`);
       }
 
       const data = await response.json();
       return data.content || '复盘分析暂时不可用，请稍后再试。';
     } catch (err) {
       console.error('复盘请求失败:', err);
-      return `复盘请求出错: ${err.message}。请检查网络连接后重试。`;
+      return `复盘请求出错: ${err.message}。请检查网络后重试。`;
     }
   }
 }

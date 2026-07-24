@@ -530,17 +530,48 @@ h1, h2, h3, .seal, .result-stamp, .turn-vs {
   color: var(--text-dim);
 }
 
-/* ============ 复盘区 ============ */
+/* ============ 复盘区 Modal 弹窗 ============ */
+.review-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(12, 10, 8, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .review-zone {
-  margin-top: 30px;
+  position: relative;
+  width: 100%;
+  max-width: 780px;
+  max-height: 85vh;
+  overflow-y: auto;
   background:
-    linear-gradient(170deg, rgba(212,169,92,0.06), transparent 35%),
+    linear-gradient(170deg, rgba(212,169,92,0.08), transparent 35%),
     var(--panel);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--gold);
   border-radius: 16px;
   padding: 28px 30px;
-  box-shadow: var(--shadow-deep);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.75);
 }
+.review-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.8rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.review-close-btn:hover { color: var(--paper); }
 .review-head {
   display: flex;
   align-items: center;

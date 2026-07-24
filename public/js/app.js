@@ -134,6 +134,9 @@ class GomokuApp {
       this.hideResult();
       this.showReview();
     });
+    document.getElementById('review-close').addEventListener('click', () => {
+      document.getElementById('review-panel').style.display = 'none';
+    });
     document.getElementById('btn-sound').addEventListener('click', (e) => {
       this.soundOn = !this.soundOn;
       localStorage.setItem('gomoku-sound', this.soundOn ? 'on' : 'off');
@@ -157,12 +160,15 @@ class GomokuApp {
   // ============ 画布尺寸 ============
 
   resizeCanvas() {
-    const container = this.canvas.parentElement;
-    if (!container) return;
-    const availW = container.clientWidth - 16;
-    const availH = container.clientHeight - 16;
-    // 动态取宽高最小容限，保证在短屏幕上棋盘不超出容器高度
-    const maxSize = Math.max(240, Math.min(availW, availH > 50 ? availH : 640, 640));
+    const inner = this.canvas.parentElement;
+    if (!inner) return;
+    const rect = inner.getBoundingClientRect();
+    const padding = 16;
+    const availW = Math.max(200, rect.width - padding);
+    const availH = Math.max(200, rect.height - padding);
+    const maxSize = Math.floor(Math.min(availW, availH));
+    if (maxSize <= 0) return;
+
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = maxSize * dpr;
     this.canvas.height = maxSize * dpr;
